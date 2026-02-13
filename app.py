@@ -78,8 +78,20 @@ if menu == "📊 Dashboard Trend":
          "tekanan_udara", "kecepatan_angin"]
     )
 
-    fig = px.line(df, x="tanggal", y=parameter,
-                  title=f"Trend {parameter}")
+   fig = px.line(
+    df,
+    x="tanggal",
+    y=parameter,
+    color_discrete_sequence=["#FF6B6B"],
+    title=f"Trend {parameter}"
+)
+
+fig.update_layout(
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    title_font=dict(size=22),
+)
+
     st.plotly_chart(fig, use_container_width=True)
 
     st.metric("Rata-rata", round(df[parameter].mean(), 2))
@@ -192,36 +204,3 @@ elif menu == "🤖 Forecast ML":
     st.write("Hasil Prediksi 7 Hari Ke Depan")
     st.dataframe(forecast_df)
 
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <h3>🌡️ Rata Suhu</h3>
-        <h2>{round(df["suhu_rata2"].mean(),2)} °C</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <h3>🌧️ Total Hujan</h3>
-        <h2>{round(df["curah_hujan"].sum(),2)} mm</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <h3>💨 Angin Maks</h3>
-        <h2>{df["kecepatan_angin"].max()} m/s</h2>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col4:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <h3>💧 Rata Kelembaban</h3>
-        <h2>{round(df["kelembaban"].mean(),2)} %</h2>
-    </div>
-    """, unsafe_allow_html=True)
