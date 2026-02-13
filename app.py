@@ -9,7 +9,35 @@ from sklearn.linear_model import LinearRegression
 # KONFIGURASI AWAL
 # =========================
 st.set_page_config(page_title="Dashboard Analisis Cuaca", layout="wide")
+st.markdown("""
+<style>
+.main {
+    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+}
 
+h1 {
+    text-align: center;
+    color: white;
+    font-weight: 700;
+}
+
+.kpi-card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.section-box {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+st.markdown("<h1>🌦️ Weather Analytics Dashboard</h1>", unsafe_allow_html=True)
 st.title("🌦️ Dashboard Analisis Data Cuaca")
 
 # =========================
@@ -40,6 +68,40 @@ menu = st.sidebar.radio(
 # =========================
 # 1️⃣ DASHBOARD TREND
 # =========================
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <h3>🌡️ Rata Suhu</h3>
+        <h2>{round(df["suhu_rata2"].mean(),2)} °C</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <h3>🌧️ Total Hujan</h3>
+        <h2>{round(df["curah_hujan"].sum(),2)} mm</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <h3>💨 Angin Maks</h3>
+        <h2>{df["kecepatan_angin"].max()} m/s</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    st.markdown(f"""
+    <div class="kpi-card">
+        <h3>💧 Rata Kelembaban</h3>
+        <h2>{round(df["kelembaban"].mean(),2)} %</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
 if menu == "📊 Dashboard Trend":
 
     st.subheader("Trend Parameter Cuaca")
