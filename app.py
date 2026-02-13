@@ -5,11 +5,12 @@ import requests
 import base64
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
+from datetime import datetime
 
 st.set_page_config(page_title="Weather Analytics Pro", layout="wide")
 
 # ==============================
-# CUSTOM CSS (Colorful Redesign)
+# CUSTOM CSS
 # ==============================
 
 st.markdown("""
@@ -41,11 +42,25 @@ def load_data():
     headers = {"Authorization": f"token {token}"}
 
     response = requests.get(url, headers=headers)
-    content = response.json()["content"]
-    decoded = base64.b64decode(content)
 
+    if response.status_code != 200:
+        st.error("Gagal mengambil file dari GitHub")
+        st.stop()
+
+    data_json = response.json()
+
+    decoded = base64.b64decode(data_json["content"])
     df = pd.read_csv(pd.io.common.BytesIO(decoded))
-    df["Date"] = pd.to_datetime(df["Date"])
+
+    df.columns = df.columns.str.strip()
+
+    if "Date" not in df.columns:
+        st.error(f"Kolom tidak ditemukan. Kolom tersedia: {df.columns.tolist()}")
+        st.stop()
+
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    df = df.dropna(subset=["Date"])
+
     return df
 
 df = load_data()
@@ -62,7 +77,6 @@ def update_github_csv(df):
     url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
     headers = {"Authorization": f"token {token}"}
 
-    # ambil SHA lama
     response = requests.get(url, headers=headers)
     sha = response.json()["sha"]
 
@@ -79,7 +93,7 @@ def update_github_csv(df):
     st.cache_data.clear()
 
 # ==============================
-# SIDEBAR MENU
+# SIDEBAR
 # ==============================
 
 st.sidebar.title("🌦 Weather System")
@@ -126,19 +140,21 @@ elif menu == "Forecast ML":
 
     st.title("🔮 7-Day Temperature Forecast")
 
-    df["Day"] = np.arange(len(df))
-    X = df[["Day"]]
-    y = df["Temperature"]
+    df_sorted = df.sort_values("Date").copy()
+    df_sorted["Day"] = np.arange(len(df_sorted))
+
+    X = df_sorted[["Day"]]
+    y = df_sorted["Temperature"]
 
     model = LinearRegression()
     model.fit(X,y)
 
-    future = np.arange(len(df), len(df)+7).reshape(-1,1)
+    future = np.arange(len(df_sorted), len(df_sorted)+7).reshape(-1,1)
     forecast = model.predict(future)
 
     fig, ax = plt.subplots()
-    ax.plot(df["Date"], df["Temperature"])
-    future_dates = pd.date_range(df["Date"].max(), periods=8)[1:]
+    ax.plot(df_sorted["Date"], df_sorted["Temperature"])
+    future_dates = pd.date_range(df_sorted["Date"].max(), periods=8)[1:]
     ax.plot(future_dates, forecast)
     st.pyplot(fig)
 
@@ -150,8 +166,12 @@ elif menu == "Search by Date":
 
     st.title("🔍 Search Data")
 
-    selected = st.date_input("Select Date")
-    result = df[df["Date"] == pd.to_datetime(selected)]
+    selected_date = st.date_input("Select Date")
+    selected_time = st.time_input("Select Time")
+
+    selected_datetime = datetime.combine(selected_date, selected_time)
+
+    result = df[df["Date"] == pd.to_datetime(selected_datetime)]
 
     if not result.empty:
         st.success("Data Found")
@@ -160,7 +180,7 @@ elif menu == "Search by Date":
         st.error("No Data Found")
 
 # ==============================
-# ADMIN LOGIN + INPUT
+# ADMIN LOGIN + DATE + TIME
 # ==============================
 
 elif menu == "Admin Login":
@@ -177,14 +197,18 @@ elif menu == "Admin Login":
         st.subheader("➕ Add New Data")
 
         new_date = st.date_input("Date")
+        new_time = st.time_input("Time")
+
         new_temp = st.number_input("Temperature")
         new_humidity = st.number_input("Humidity")
         new_rain = st.number_input("Rainfall")
 
         if st.button("Save Data"):
 
+            full_datetime = datetime.combine(new_date, new_time)
+
             new_row = pd.DataFrame({
-                "Date":[new_date],
+                "Date":[full_datetime],
                 "Temperature":[new_temp],
                 "Humidity":[new_humidity],
                 "Rainfall":[new_rain]
