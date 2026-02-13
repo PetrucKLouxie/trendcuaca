@@ -1,198 +1,173 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 import numpy as np
+import os
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+from datetime import datetime
 
+st.set_page_config(page_title="Weather Analytics Dashboard", layout="wide")
 
-# =========================
-# KONFIGURASI AWAL
-# =========================
-st.set_page_config(page_title="Dashboard Analisis Cuaca", layout="wide")
+# ==============================
+# Custom CSS (Redesign Total)
+# ==============================
+
 st.markdown("""
 <style>
 .main {
-    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+    background-color: #0f172a;
 }
-
-h1 {
-    text-align: center;
+h1, h2, h3 {
+    color: #f8fafc;
+}
+.metric-card {
+    background: linear-gradient(135deg, #2563eb, #9333ea);
+    padding: 20px;
+    border-radius: 15px;
     color: white;
-    font-weight: 700;
-}
-
-.kpi-card {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
     text-align: center;
+    font-size: 18px;
+    font-weight: bold;
 }
-
-.section-box {
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+.sidebar .sidebar-content {
+    background-color: #1e293b;
 }
 </style>
 """, unsafe_allow_html=True)
-st.markdown("<h1>🌦️ Weather Analytics Dashboard</h1>", unsafe_allow_html=True)
 
-# =========================
-# LOAD DATA
-# =========================
-@st.cache_data
-def load_data():
-    df = pd.read_csv("dataset.csv")
-    df["tanggal"] = pd.to_datetime(df["tanggal"])
-    df["bulan"] = df["tanggal"].dt.month
-    return df
+# ==============================
+# Dataset Setup
+# ==============================
 
-df = load_data()
+DATA_FILE = "weather_dataset.csv"
 
-# =========================
-# SIDEBAR MENU
-# =========================
-menu = st.sidebar.radio(
-    "Menu Navigasi",
-    ["📊 Dashboard Trend",
-     "🔎 Analisis Harian",
-     "📈 Analisis Bulanan",
-     "📥 Download Data",
-     " 🤖 Forecast ML"]
-    
-)
+if not os.path.exists(DATA_FILE):
+    dates = pd.date_range(start="2024-01-01", periods=365)
+    data = pd.DataFrame({
+        "Date": dates,
+        "Temperature": np.random.normal(28, 3, 365),
+        "Humidity": np.random.normal(75, 5, 365),
+        "Rainfall": np.random.normal(10, 4, 365)
+    })
+    data.to_csv(DATA_FILE, index=False)
 
-# =========================
-# 1️⃣ DASHBOARD TREND
-# =========================
+df = pd.read_csv(DATA_FILE)
+df["Date"] = pd.to_datetime(df["Date"])
 
-if menu == "📊 Dashboard Trend":
+# ==============================
+# Sidebar Navigation
+# ==============================
 
-    st.subheader("Trend Parameter Cuaca")
+st.sidebar.title("🌦 Navigation")
+menu = st.sidebar.radio("Menu", [
+    "Dashboard",
+    "Trend Analysis",
+    "Forecast ML",
+    "Search by Date",
+    "Admin Login"
+])
 
-    parameter = st.selectbox(
-        "Pilih Parameter",
-        ["suhu_rata2", "kelembaban", "curah_hujan",
-         "tekanan_udara", "kecepatan_angin"]
-    )
+# ==============================
+# DASHBOARD
+# ==============================
 
-   fig = px.bar(
-    df,
-    x="tanggal",
-    y=parameter,
-    color_discrete_sequence=["#FF6B6B"],
-    title=f"Trend {parameter}"
-    )
-    st.plotly_chart(fig, use_container_width=True)
-    st.metric("Rata-rata", round(df[parameter].mean(), 2))
+if menu == "Dashboard":
+    st.title("🌤 Weather Analytics Dashboard")
 
+    col1, col2, col3 = st.columns(3)
 
-# =========================
-# 2️⃣ ANALISIS HARIAN
-# =========================
-elif menu == "🔎 Analisis Harian":
+    col1.markdown(f'<div class="metric-card">🌡 Avg Temp<br>{df["Temperature"].mean():.2f} °C</div>', unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-card">💧 Avg Humidity<br>{df["Humidity"].mean():.2f} %</div>', unsafe_allow_html=True)
+    col3.markdown(f'<div class="metric-card">🌧 Avg Rainfall<br>{df["Rainfall"].mean():.2f} mm</div>', unsafe_allow_html=True)
 
-    st.subheader("Analisis Berdasarkan Tanggal")
+    st.subheader("📊 Temperature Trend")
+    st.line_chart(df.set_index("Date")["Temperature"])
 
-    tanggal_input = st.date_input("Pilih Tanggal")
+# ==============================
+# TREND ANALYSIS
+# ==============================
 
-    hasil = df[df["tanggal"] == pd.to_datetime(tanggal_input)]
+elif menu == "Trend Analysis":
+    st.title("📈 Trend Analysis")
 
-    if not hasil.empty:
-        st.dataframe(hasil)
+    parameter = st.selectbox("Select Parameter", ["Temperature", "Humidity", "Rainfall"])
+    st.line_chart(df.set_index("Date")[parameter])
 
-        rata_suhu = df["suhu_rata2"].mean()
-        suhu_hari = hasil["suhu_rata2"].values[0]
+# ==============================
+# FORECAST ML
+# ==============================
 
-        if suhu_hari > rata_suhu:
-            st.success("Suhu hari ini di atas rata-rata tahunan 🌡️")
-        else:
-            st.info("Suhu hari ini di bawah rata-rata tahunan")
+elif menu == "Forecast ML":
+    st.title("🔮 Weather Forecast (Simple ML)")
 
-    else:
-        st.warning("Data tidak ditemukan untuk tanggal tersebut")
+    df["Day"] = np.arange(len(df))
 
-
-# =========================
-# 3️⃣ ANALISIS BULANAN
-# =========================
-elif menu == "📈 Analisis Bulanan":
-
-    st.subheader("Rata-rata Bulanan")
-
-    bulanan = df.groupby("bulan").mean(numeric_only=True).reset_index()
-
-    fig = px.bar(bulanan, x="bulan", y="suhu_rata2",
-                 title="Rata-rata Suhu Bulanan")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.dataframe(bulanan)
-
-
-# =========================
-# 4️⃣ DOWNLOAD DATA
-# =========================
-elif menu == "📥 Download Data":
-
-    st.subheader("Download Dataset")
-
-    csv = df.to_csv(index=False).encode("utf-8")
-
-    st.download_button(
-        label="Download CSV",
-        data=csv,
-        file_name="dataset_cuaca.csv",
-        mime="text/csv",
-    )
-# =========================
-# 🤖 Forecast ML
-# =========================
-elif menu == "🤖 Forecast ML":
-
-    st.subheader("Forecast Suhu Menggunakan Linear Regression")
-
-    # Gunakan suhu sebagai contoh
-    df_sorted = df.sort_values("tanggal").copy()
-    df_sorted["hari_ke"] = np.arange(len(df_sorted))
-
-    X = df_sorted[["hari_ke"]]
-    y = df_sorted["suhu_rata2"]
+    X = df[["Day"]]
+    y = df["Temperature"]
 
     model = LinearRegression()
     model.fit(X, y)
 
-    # Prediksi 7 hari ke depan
-    hari_terakhir = df_sorted["hari_ke"].iloc[-1]
-    future_days = np.arange(hari_terakhir + 1, hari_terakhir + 8)
-    future_X = future_days.reshape(-1, 1)
+    future_days = np.arange(len(df), len(df)+7).reshape(-1,1)
+    forecast = model.predict(future_days)
 
-    predictions = model.predict(future_X)
+    st.subheader("📅 7-Day Temperature Forecast")
+    fig, ax = plt.subplots()
+    ax.plot(df["Date"], df["Temperature"])
+    future_dates = pd.date_range(df["Date"].max(), periods=8)[1:]
+    ax.plot(future_dates, forecast)
+    st.pyplot(fig)
 
-    future_dates = pd.date_range(
-        df_sorted["tanggal"].iloc[-1] + pd.Timedelta(days=1),
-        periods=7
-    )
+# ==============================
+# SEARCH BY DATE
+# ==============================
 
-    forecast_df = pd.DataFrame({
-        "tanggal": future_dates,
-        "forecast_suhu": predictions
-    })
+elif menu == "Search by Date":
+    st.title("🔍 Search Weather by Date")
 
-    # Gabungkan data lama + forecast
-    fig = px.line(df_sorted, x="tanggal", y="suhu_rata2",
-                  title="Forecast 7 Hari ke Depan")
+    selected_date = st.date_input("Choose Date")
 
-    fig.add_scatter(
-        x=forecast_df["tanggal"],
-        y=forecast_df["forecast_suhu"],
-        mode="lines",
-        name="Forecast",
-    )
+    result = df[df["Date"] == pd.to_datetime(selected_date)]
 
-    st.plotly_chart(fig, use_container_width=True)
+    if not result.empty:
+        st.success("Data Found ✅")
+        st.dataframe(result)
+    else:
+        st.error("No Data Found")
 
-    st.write("Hasil Prediksi 7 Hari Ke Depan")
-    st.dataframe(forecast_df)
+# ==============================
+# ADMIN LOGIN + INPUT
+# ==============================
 
+elif menu == "Admin Login":
+
+    st.title("🔐 Admin Access")
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if username == "admin" and password == "1234":
+        st.success("Login Successful ✅")
+
+        st.subheader("➕ Add New Weather Data")
+
+        new_date = st.date_input("Date")
+        new_temp = st.number_input("Temperature")
+        new_humidity = st.number_input("Humidity")
+        new_rain = st.number_input("Rainfall")
+
+        if st.button("Save Data"):
+            new_row = pd.DataFrame({
+                "Date": [new_date],
+                "Temperature": [new_temp],
+                "Humidity": [new_humidity],
+                "Rainfall": [new_rain]
+            })
+
+            df_updated = pd.concat([df, new_row])
+            df_updated.to_csv(DATA_FILE, index=False)
+
+            st.success("Data Saved Permanently ✅")
+
+    else:
+        st.warning("Login Required")
