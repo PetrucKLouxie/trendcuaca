@@ -27,6 +27,7 @@ h1,h2,h3,h4 {color: white;}
 }
 </style>
 """, unsafe_allow_html=True)
+st.sidebar.image("logo.png", use_container_width=True)
 
 # ==============================
 # LOAD DATA FROM GITHUB
