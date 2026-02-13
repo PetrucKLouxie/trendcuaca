@@ -164,7 +164,7 @@ elif menu == "Forecast ML":
     # =========================
     df = pd.read_csv("dataset.csv")
 
-    df["datetime"] = pd.to_datetime(df["datetime"])
+    df["datetime"] = pd.to_datetime(df["date"])
     df["day"] = df["datetime"].dt.day
     df["month"] = df["datetime"].dt.month
     df["year"] = df["datetime"].dt.year
