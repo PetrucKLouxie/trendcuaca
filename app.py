@@ -190,7 +190,7 @@ elif menu == "Admin Login":
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
-    if username == "admin" and password == "1234":
+    if username == "admin" and password == "cuaca123":
 
         st.success("Login Success")
 
