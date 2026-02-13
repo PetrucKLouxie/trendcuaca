@@ -27,7 +27,19 @@ h1,h2,h3,h4 {color: white;}
 }
 </style>
 """, unsafe_allow_html=True)
-st.sidebar.image("logo.png", use_container_width=True)
+st.sidebar.markdown('<div class="sidebar-bottom">', unsafe_allow_html=True)
+
+st.sidebar.image("logo.png", width=120)
+st.sidebar.markdown("""
+<center>
+<b>Weather Analytics</b><br>
+Version 1.0<br>
+© 2026 Yosef
+</center>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown('</div>', unsafe_allow_html=True)
+
 
 # ==============================
 # LOAD DATA FROM GITHUB
