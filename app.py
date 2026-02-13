@@ -164,10 +164,10 @@ elif menu == "Forecast ML":
     # =========================
     df = pd.read_csv("dataset.csv")
 
-    df["datetime"] = pd.to_datetime(df["date"])
-    df["day"] = df["datetime"].dt.day
-    df["month"] = df["datetime"].dt.month
-    df["year"] = df["datetime"].dt.year
+    df["Date"] = pd.to_datetime(df["Date"])
+    df["day"] = df["Date"].dt.day
+    df["month"] = df["Date"].dt.month
+    df["year"] = df["Date"].dt.year
 
     # =========================
     # FEATURES & TARGET
