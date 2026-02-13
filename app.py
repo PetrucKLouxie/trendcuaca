@@ -128,9 +128,9 @@ if menu == "Dashboard":
 
     col1, col2, col3 = st.columns(3)
 
-    col1.markdown(f'<div class="metric-card">🌡 Avg Temp<br>{df["Suhu"].mean():.2f} °C</div>', unsafe_allow_html=True)
-    col2.markdown(f'<div class="metric-card">💧 Avg Humidity<br>{df["Kelembapan"].mean():.2f} %</div>', unsafe_allow_html=True)
-    col3.markdown(f'<div class="metric-card">🌧 Avg Rainfall<br>{df["Curah Hujan"].mean():.2f} mm</div>', unsafe_allow_html=True)
+    col1.markdown(f'<div class="metric-card">🌡 Avg Temp<br>{df["Temperature"].mean():.2f} °C</div>', unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-card">💧 Avg Humidity<br>{df["Humidity"].mean():.2f} %</div>', unsafe_allow_html=True)
+    col3.markdown(f'<div class="metric-card">🌧 Avg Rainfall<br>{df["Rainfall"].mean():.2f} mm</div>', unsafe_allow_html=True)
 
     st.subheader("Temperature Trend")
     st.line_chart(df.set_index("Date")["Temperature"])
