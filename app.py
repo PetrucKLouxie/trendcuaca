@@ -191,8 +191,8 @@ elif menu == "Forecast ML":
         next_day,
         last_row["month"],
         last_row["year"],
-        last_row["humidity"],
-        last_row["rainfall"]
+        last_row["Humidity"],
+        last_row["Rainfall"]
     ]])
 
     # Prediction
@@ -207,17 +207,17 @@ elif menu == "Forecast ML":
     # =========================
     # DESKRIPSI OTOMATIS
     # =========================
-    def generate_description(temp, humidity, rainfall):
-        if rainfall > 5:
+    def generate_description(Temperature, Humidity, Rainfall):
+        if Rainfall > 5:
             return "Berpotensi hujan dengan kelembaban tinggi."
         elif temp > 32:
             return "Cuaca panas dengan suhu tinggi."
-        elif humidity > 80:
+        elif Humidity > 80:
             return "Udara lembab, kemungkinan mendung."
         else:
             return "Cuaca relatif stabil dan normal."
 
-    description = generate_description(prediction, last_row["humidity"], last_row["rainfall"])
+    description = generate_description(prediction, last_row["Humidity"], last_row["Rainfall"])
 
     # =========================
     # TAMPILKAN HASIL
