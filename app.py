@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
 
-st.set_page_config(page_title="AI untuk Semua", layout="wide")
+st.set_page_config(page_title="Analisis Cuaca PRO", layout="wide")
 
 # ==============================
 # CUSTOM CSS
@@ -110,7 +110,7 @@ def update_github_csv(df):
 # ==============================
 
 st.sidebar.title("🌦 Weather System")
-menu = st.sidebar.radio("Navigation", [
+menu = st.sidebar.radio("Telusuri", [
     "Dashboard",
     "Trend Analysis",
     "Forecast ML",
@@ -128,9 +128,9 @@ if menu == "Dashboard":
 
     col1, col2, col3 = st.columns(3)
 
-    col1.markdown(f'<div class="metric-card">🌡 Avg Temp<br>{df["Temperature"].mean():.2f} °C</div>', unsafe_allow_html=True)
-    col2.markdown(f'<div class="metric-card">💧 Avg Humidity<br>{df["Humidity"].mean():.2f} %</div>', unsafe_allow_html=True)
-    col3.markdown(f'<div class="metric-card">🌧 Avg Rainfall<br>{df["Rainfall"].mean():.2f} mm</div>', unsafe_allow_html=True)
+    col1.markdown(f'<div class="metric-card">🌡 Avg Temp<br>{df["Suhu"].mean():.2f} °C</div>', unsafe_allow_html=True)
+    col2.markdown(f'<div class="metric-card">💧 Avg Humidity<br>{df["Kelembapan"].mean():.2f} %</div>', unsafe_allow_html=True)
+    col3.markdown(f'<div class="metric-card">🌧 Avg Rainfall<br>{df["Curah Hujan"].mean():.2f} mm</div>', unsafe_allow_html=True)
 
     st.subheader("Temperature Trend")
     st.line_chart(df.set_index("Date")["Temperature"])
@@ -151,25 +151,115 @@ elif menu == "Trend Analysis":
 
 elif menu == "Forecast ML":
 
-    st.title("🔮 7-Day Temperature Forecast")
+    import pandas as pd
+    import numpy as np
+    import plotly.graph_objects as go
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.model_selection import train_test_split
 
-    df_sorted = df.sort_values("Date").copy()
-    df_sorted["Day"] = np.arange(len(df_sorted))
+    st.title("🤖 Machine Learning Forecast")
 
-    X = df_sorted[["Day"]]
-    y = df_sorted["Temperature"]
+    # =========================
+    # LOAD DATA
+    # =========================
+    df = pd.read_csv("dataset.csv")
 
-    model = LinearRegression()
-    model.fit(X,y)
+    df["datetime"] = pd.to_datetime(df["datetime"])
+    df["day"] = df["datetime"].dt.day
+    df["month"] = df["datetime"].dt.month
+    df["year"] = df["datetime"].dt.year
 
-    future = np.arange(len(df_sorted), len(df_sorted)+7).reshape(-1,1)
-    forecast = model.predict(future)
+    # =========================
+    # FEATURES & TARGET
+    # =========================
+    X = df[["day", "month", "year", "humidity", "rainfall"]]
+    y = df["temperature"]
 
-    fig, ax = plt.subplots()
-    ax.plot(df_sorted["Date"], df_sorted["Temperature"])
-    future_dates = pd.date_range(df_sorted["Date"].max(), periods=8)[1:]
-    ax.plot(future_dates, forecast)
-    st.pyplot(fig)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+    model = RandomForestRegressor(n_estimators=100)
+    model.fit(X_train, y_train)
+
+    # =========================
+    # FORECAST NEXT DAY
+    # =========================
+    last_row = df.iloc[-1]
+
+    next_day = last_row["day"] + 1
+
+    future_input = np.array([[ 
+        next_day,
+        last_row["month"],
+        last_row["year"],
+        last_row["humidity"],
+        last_row["rainfall"]
+    ]])
+
+    # Prediction
+    prediction = model.predict(future_input)[0]
+
+    # Confidence estimation (std dev from trees)
+    preds = np.array([tree.predict(future_input)[0] for tree in model.estimators_])
+    std_dev = np.std(preds)
+    lower = prediction - 1.96 * std_dev
+    upper = prediction + 1.96 * std_dev
+
+    # =========================
+    # DESKRIPSI OTOMATIS
+    # =========================
+    def generate_description(temp, humidity, rainfall):
+        if rainfall > 5:
+            return "Berpotensi hujan dengan kelembaban tinggi."
+        elif temp > 32:
+            return "Cuaca panas dengan suhu tinggi."
+        elif humidity > 80:
+            return "Udara lembab, kemungkinan mendung."
+        else:
+            return "Cuaca relatif stabil dan normal."
+
+    description = generate_description(prediction, last_row["humidity"], last_row["rainfall"])
+
+    # =========================
+    # TAMPILKAN HASIL
+    # =========================
+    st.metric("Prediksi Suhu Besok", f"{prediction:.2f} °C")
+
+    st.info(description)
+
+    # =========================
+    # GRAFIK CONFIDENCE
+    # =========================
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=[0],
+        y=[prediction],
+        mode="markers",
+        name="Prediction"
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=[0, 0],
+        y=[lower, upper],
+        mode="lines",
+        name="Confidence Interval"
+    ))
+
+    fig.update_layout(
+        title="Confidence Interval Forecast",
+        xaxis=dict(showticklabels=False),
+        yaxis_title="Temperature (°C)",
+        template="plotly_dark"
+    )
+
+    st.plotly_chart(fig)
+
+    # =========================
+    # AKURASI MODEL
+    # =========================
+    score = model.score(X_test, y_test)
+    st.write(f"Model Accuracy (R² Score): {score:.2f}")
+
 
 # ==============================
 # SEARCH
