@@ -207,7 +207,7 @@ elif menu == "Forecast ML":
     # =========================
     # DESKRIPSI OTOMATIS
     # =========================
-    def generate_description(Temperature, Humidity, Rainfall):
+    def generate_description(temp, Humidity, Rainfall):
         if Rainfall > 5:
             return "Berpotensi hujan dengan kelembaban tinggi."
         elif temp > 32:
