@@ -29,14 +29,7 @@ h1,h2,h3,h4 {color: white;}
 """, unsafe_allow_html=True)
 st.sidebar.markdown('<div class="sidebar-bottom">', unsafe_allow_html=True)
 
-st.sidebar.markdown(
-    """
-    <div style="text-align: center;">
-        <img src="logo.png" width="240">
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.sidebar.image("logo.png", use_container_width=True)
 st.sidebar.markdown("""
 <center>
 <b>Analisis Trend Cuaca</b><br>
