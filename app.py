@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from datetime import datetime
 
-st.set_page_config(page_title="Weather Analytics Pro", layout="wide")
+st.set_page_config(page_title="AI untuk Semua", layout="wide")
 
 # ==============================
 # CUSTOM CSS
@@ -32,7 +32,7 @@ st.sidebar.markdown('<div class="sidebar-bottom">', unsafe_allow_html=True)
 st.sidebar.image("logo.png", width=120)
 st.sidebar.markdown("""
 <center>
-<b>Weather Analytics</b><br>
+<b>Analisis Trend Cuaca</b><br>
 Version 1.0<br>
 © 2026 Yosef
 </center>
