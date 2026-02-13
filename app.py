@@ -78,22 +78,14 @@ if menu == "📊 Dashboard Trend":
          "tekanan_udara", "kecepatan_angin"]
     )
 
-   fig = px.line(
+   fig = px.bar(
     df,
     x="tanggal",
     y=parameter,
     color_discrete_sequence=["#FF6B6B"],
     title=f"Trend {parameter}"
-)
-
-fig.update_layout(
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    title_font=dict(size=22),
-)
-
+    )
     st.plotly_chart(fig, use_container_width=True)
-
     st.metric("Rata-rata", round(df[parameter].mean(), 2))
 
 
